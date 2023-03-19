@@ -27,7 +27,13 @@ pipeline{
                         
                     }
                }
+         
            }
+           stage('Stage 5: Push Docker image') {
+             steps {
+                     sh 'docker push docker.io/task0209/chillapp:v1'
+                   }
+         }
       }  
     
 }
