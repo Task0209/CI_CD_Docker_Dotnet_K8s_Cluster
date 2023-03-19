@@ -1,0 +1,33 @@
+pipeline{
+    agent any 
+    stages{
+        stage('Stage 1: Cloning Repo') {
+            steps{
+                git credentialsId: 'github', url: 'https://github.com/Task0209/chillapp.git'
+            }
+        }
+        stage('Stage 2: Build the Docker Image') {
+            steps{
+                sh 'whoami'
+                sh 'docker build -t task0209/chillapp:v1 .'
+                sh 'chmod +x Dockerfile'
+            }
+        }
+        
+        stage('Stage 3: Validate the docker image') {
+           steps {
+                sh 'docker images '
+              }
+        }
+        
+        stage('Stage 4: Login Docker') {
+           steps {
+                withCredentials([usernamePassword(credentialsId: 'DockerPassword', passwordVariable: 'Password', usernameVariable: 'UserName')]) {
+                        sh "docker login -u ${env.UserName} -p ${env.Password}"
+                        
+                    }
+               }
+           }
+      }  
+    
+}
