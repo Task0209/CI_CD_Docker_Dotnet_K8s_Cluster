@@ -34,6 +34,19 @@ pipeline{
                      sh 'docker push docker.io/task0209/chillapp:v1'
                    }
          }
+           stage ('Stage 6: Deploying to K8s Cluster'){
+             steps {
+                 script {
+                      withKubeConfig(credentialsId: 'kubeconfig') {
+                          sh 'curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.22.0/bin/linux/amd64/kubectl"'  
+                          sh 'chmod u+x ./kubectl'  
+                          sh './kubectl create -f deploy.yaml'
+                          sh './kubectl create -f service.yaml'
+                          sh 'hostname'
+                         }
+                  }
+             }
+           }
       }  
     
 }
