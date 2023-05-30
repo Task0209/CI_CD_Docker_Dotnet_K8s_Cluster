@@ -9,8 +9,7 @@ pipeline{
         stage('Stage 2: Build the Docker Image') {
             steps{
                 sh 'whoami'
-                sh 'docker build -t task0209/chillapp:v1 .'
-                sh 'chmod +x Dockerfile'
+                sh "docker build -t task0209/chillapp:${BUILD_NuMBER} . "
             }
         }
         
@@ -22,31 +21,39 @@ pipeline{
         
         stage('Stage 4: Login Docker') {
            steps {
-                withCredentials([usernamePassword(credentialsId: 'DockerPassword', passwordVariable: 'Password', usernameVariable: 'UserName')]) {
-                        sh "docker login -u ${env.UserName} -p ${env.Password}"
-                        
-                    }
+                  withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'PassWord', usernameVariable: 'UserName')]) {
+                              sh "docker login -u ${env.UserName} -p ${env.PassWord}"
+                }
                }
          
            }
            stage('Stage 5: Push Docker image') {
              steps {
-                     sh 'docker push docker.io/task0209/chillapp:v1'
+                     sh "docker push docker.io/task0209/chillapp:${BUILD_NuMBER}"
                    }
          }
-           stage ('Stage 6: Deploying to K8s Cluster'){
+           stage ('Stage 6: Install & Download Kubectl'){
+             steps {
+                   sh 'curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"'  
+                    sh 'chmod u+x ./kubectl'
+                    sh 'chmod u+x ./deploy.yaml'
+                    sh 'chmod u+x ./service.yaml'
+                    sh 'ls -l'
+                    sh 'pwd'
+                  }
+            
+             }
+             
+             stage ('Stage 7: Deploying to K8s Cluster'){
              steps {
                  script {
-                      withKubeConfig(credentialsId: 'kubeconfig') {
-                          sh 'curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.22.0/bin/linux/amd64/kubectl"'  
-                          sh 'chmod u+x ./kubectl'  
-                          sh './kubectl create -f deploy.yaml'
-                          sh './kubectl create -f service.yaml'
-                          sh 'hostname'
-                         }
+                      withKubeConfig(credentialsId: 'kkk', serverUrl: 'https://192.168.0.50:6443') {
+                                  sh './kubectl create -f deploy.yaml'
+                                  sh './kubectl create -f service.yaml'
+                                 }
                   }
              }
            }
+           }
       }  
     
-}
